@@ -1,22 +1,63 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './main.less';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRepos } from '../actions/repos';
-import Repo from './repo/Repo.jsx';
+import { setCurrentPage } from '../../reducers/reposReducer';
+import Repo from './repo/Repo';
+import { createPages } from '../../utils/pagesCreator';
 
 const Main = () => {
     const dispatch = useDispatch();
     const repos = useSelector(state => state.repos.items);
+    const isFetching = useSelector(state => state.repos.isFetching);
+    const currentPage = useSelector(state => state.repos.currentPage);
+    const totalCount = useSelector(state => state.repos.totalCount);
+    const perPage = useSelector(state => state.repos.perPage);
+    const [searchValue, setSearchValue] = useState('');
+    const pagesCount = Math.ceil(totalCount / perPage);
+    const pages = [];
+    createPages(pages, pagesCount, currentPage);
 
     useEffect(() => {
-        dispatch(getRepos());
-    }, []);
+        dispatch(getRepos(searchValue, currentPage, perPage));
+    }, [currentPage]);
+
+    function searchHandler() {
+        dispatch(setCurrentPage(1));
+        dispatch(getRepos(searchValue, currentPage, perPage));
+    }
 
     return (
         <div>
-            {repos.map(repo => (
-                <Repo repo={repo} />
-            ))}
+            <div className='search'>
+                <input
+                    value={searchValue}
+                    type='text'
+                    placeholder='input repo name'
+                    className='search__input'
+                    onChange={e => setSearchValue(e.target.value)}
+                />
+                <button className='search-btn' onClick={() => searchHandler()}>
+                    Search
+                </button>
+            </div>
+            {isFetching === false ? (
+                repos.map((repo, idx) => <Repo repo={repo} key={idx} />)
+            ) : (
+                <div className='fetching'></div>
+            )}
+
+            <div className='pages'>
+                {pages.map((page, idx) => (
+                    <span
+                        key={idx}
+                        className={currentPage == page ? 'page page--current' : 'page'}
+                        onClick={() => dispatch(setCurrentPage(page))}
+                    >
+                        {page}
+                    </span>
+                ))}
+            </div>
         </div>
     );
 };
