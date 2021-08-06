@@ -35,7 +35,7 @@ const Main = () => {
         <div>
             { isFetchError &&
             <div className="alert alert-danger" role="alert">
-                Error. Please go to main page.
+                Error. Please refresh page.
             </div>
             }
             <div className="search">
